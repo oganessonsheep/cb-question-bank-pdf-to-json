@@ -37,11 +37,34 @@ def extract_sat_data(file_path, output_path):
         j = 0
 
         body_chunks = []
+        current_para = []
+
+        PARA_GAP = 10
+
+        last_bottom = None
+
         for i in range(11, len(blocks)):
             if blocks[i][4][:3] == "A. ":
                 j = i
                 break
-            body_chunks.append(blocks[i][4].replace("\n", " ").strip())
+            text = blocks[i][4].replace("\n", " ").strip()
+            y0 = blocks[i][1]
+            y1 = blocks[i][3]
+
+            if last_bottom is None:
+                current_para.append(text)
+            else:
+                if y0 - last_bottom > PARA_GAP:
+                    body_chunks.append(" ".join(current_para))
+                    current_para = [text]
+                else:
+                    current_para.append(text)
+
+            last_bottom = y1
+
+        if current_para:
+            body_chunks.append(" ".join(current_para))
+
         body = "\n\n".join(body_chunks)
 
         current_choice = None
@@ -64,7 +87,6 @@ def extract_sat_data(file_path, output_path):
             if "Correct Answer:" in blocks[i][4]:
                 j = i
                 lines = blocks[i][4].strip().split("\n")
-                print("hi")
                 if len(lines) > 1:
                     correct_ans = lines[1].strip()
                 break
